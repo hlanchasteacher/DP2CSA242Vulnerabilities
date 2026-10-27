@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IB DP CS HL: Network Vulnerabilities Lab</title>
+    <style>
+        :root {
+            --bg: #0d1117; --panel: #161b22; --text: #c9d1d9; --accent: #58a6ff;
+            --danger: #f85149; --success: #3fb950; --warning: #d29922; --code-bg: #000000;
+        }
+        body { font-family: 'Consolas', 'Courier New', monospace; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar Navigation */
+        #sidebar { width: 280px; background: var(--panel); border-right: 1px solid #30363d; padding: 15px 0; overflow-y: auto; flex-shrink: 0; }
+        #sidebar h2 { color: var(--accent); text-align: center; font-size: 1.1rem; border-bottom: 1px solid #30363d; padding-bottom: 15px; margin-top: 0; }
+        .nav-item { padding: 10px 15px; cursor: pointer; border-left: 3px solid transparent; font-size: 0.85rem; color: #8b949e; }
+        .nav-item:hover { background: rgba(88, 166, 255, 0.05); color: var(--text); }
+        .nav-item.active { border-left-color: var(--accent); background: rgba(88, 166, 255, 0.15); color: var(--accent); font-weight: bold; }
+        
+        /* Main Content */
+        #content { flex-grow: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .module { display: none; flex-grow: 1; flex-direction: column; }
+        .module.active { display: flex; }
+        h1 { color: var(--accent); border-bottom: 1px solid #30363d; padding-bottom: 10px; margin-top: 0; font-size: 1.4rem; }
+        
+        /* Info Section (From Textbook) */
+        .info-section { background: rgba(88, 166, 255, 0.05); border: 1px solid #30363d; border-left: 4px solid var(--accent); border-radius: 4px; padding: 15px; margin-bottom: 20px; font-size: 0.9rem; }
+        .info-section strong { color: var(--accent); }
+        .info-section p { margin: 5px 0; }
+        .info-section .example { color: var(--warning); margin-top: 10px; display: block; }
+
+        /* Two-Panel Layout (Simulator) */
+        .workspace { display: flex; gap: 20px; flex-grow: 1; margin-bottom: 15px; min-height: 200px;}
+        .panel { background: var(--panel); border: 1px solid #30363d; border-radius: 6px; padding: 15px; flex: 1; display: flex; flex-direction: column; }
+        .panel h3 { margin-top: 0; color: var(--warning); font-size: 0.9rem; border-bottom: 1px solid #30363d; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
+        
+        .terminal { background: var(--code-bg); border: 1px solid #30363d; border-radius: 4px; padding: 15px; font-family: inherit; white-space: pre-wrap; flex-grow: 1; overflow-y: auto; color: #e6edf3; font-size: 0.85rem; line-height: 1.4;}
+        
+        /* Buttons */
+        button { background: #21262d; color: var(--text); border: 1px solid #30363d; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 0.9rem; transition: 0.2s; align-self: flex-start; margin-bottom: 20px;}
+        button:hover:not(:disabled) { background: var(--accent); color: #000; border-color: var(--accent); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button.danger { background: var(--danger); color: white; border-color: var(--danger); }
+        button.danger:hover:not(:disabled) { background: #ff7b72; }
+
+        /* Quiz Section */
+        .quiz-section { background: var(--panel); border: 1px solid var(--accent); border-radius: 6px; padding: 20px; margin-top: auto; }
+        .quiz-section h3 { color: var(--accent); margin-top: 0; font-size: 1rem; }
+        .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        .quiz-option { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.9rem; padding: 8px; border-radius: 4px; transition: 0.2s; border: 1px solid transparent;}
+        .quiz-option:hover { background: rgba(88, 166, 255, 0.1); border-color: #30363d;}
+        .quiz-option input[type="radio"] { accent-color: var(--accent); transform: scale(1.2); }
+        .quiz-feedback { margin-top: 15px; font-weight: bold; display: none; padding: 10px; border-radius: 4px; }
+        .feedback-correct { background: rgba(63, 185, 80, 0.2); color: var(--success); border: 1px solid var(--success); display: block;}
+        .feedback-wrong { background: rgba(248, 81, 73, 0.2); color: var(--danger); border: 1px solid var(--danger); display: block;}
+
+        /* Syntax Highlighting */
+        .t-red { color: var(--danger); font-weight: bold;}
+        .t-green { color: var(--success); font-weight: bold;}
+        .t-blue { color: var(--accent); font-weight: bold;}
+        .t-yellow { color: var(--warning); font-weight: bold;}
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>HL VULN MECHANISMS</h2>
+        <div class="nav-item active" onclick="showMod('ddos', this)">1. DDoS</div>
+        <div class="nav-item" onclick="showMod('insecure', this)">2. Insecure Protocols</div>
+        <div class="nav-item" onclick="showMod('malware', this)">3. Malware (Ransomware)</div>
+        <div class="nav-item" onclick="showMod('mitm', this)">4. Man-in-the-Middle</div>
+        <div class="nav-item" onclick="showMod('phishing', this)">5. Phishing</div>
+        <div class="nav-item" onclick="showMod('sqli', this)">6. SQL Injection</div>
+        <div class="nav-item" onclick="showMod('xss', this)">7. Cross-Site Scripting</div>
+        <div class="nav-item" onclick="showMod('unpatched', this)">8. Unpatched Software</div>
+        <div class="nav-item" onclick="showMod('weakauth', this)">9. Weak Authentication</div>
+        <div class="nav-item" onclick="showMod('zeroday', this)">10. Zero-Day Exploits</div>
+        <div class="nav-item" onclick="showMod('combined', this)">11. How Attacks Combine</div>
+    </div>
+
+    <div id="content">
+        
+        <!-- 1. DDOS -->
+        <div id="ddos" class="module active">
+            <h1>1. Distributed Denial of Service (DDoS)</h1>
+            <div class="info-section">
+                <p><strong>Definition:</strong> An attack that overwhelms a website or online service with excessive traffic from multiple sources, rendering it inaccessible to legitimate users.</p>
+                <p><strong>Mechanism:</strong> Attackers use a <strong>botnet</strong> (a network of infected devices) to generate a massive volume of requests, saturating the target's resources.</p>
+                <span class="example"><strong>Example:</strong> An e-commerce site is overwhelmed with traffic from thousands of infected computers, causing it to crash during a major sales event.</span>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <h3>Attacker Botnet</h3>
+                    <div class="terminal" id="ddos-left">> Botnet armed and ready.<br>> Target: 192.168.1.10:80<br>> Awaiting command...</div>
+                </div>
+                <div class="panel">
+                    <h3>Target Server State</h3>
+                    <div class="terminal" id="ddos-right">> Server Backlog Queue: [ 0 / 5 ]<br>> Status: LISTENING<br>> Awaiting connection requests...</div>
+                </div>
+            </div>
+            <button id="ddos-btn" onclick="nextDDoS()">Next Step: Send Spoofed SYN Packets</button>
+            
+            <!-- Quiz -->
+            <div class="quiz-section">
+                <h3>Knowledge Check</h3>
+                <p>Which specific mechanism does a SYN Flood exploit to cause a denial of service?</p>
+                <div class="quiz-options">
+                    <label class="quiz-option"><input type="radio" name="q_ddos" value="A"> A) The cryptographic key exchange.</label>
+                    <label class="quiz-option"><input type="radio" name="q_ddos" value="B"> B) The TCP 3-way handshake backlog queue.</label>
+                    <label class="quiz-option"><input type="radio" name="q_ddos" value="C"> C) The DNS resolution hierarchy.</label>
+                    <label class="quiz-option"><input type="radio" name="q_ddos" value="D"> D) The ARP cache table.</label>
+                </div>
+                <button onclick="checkAnswer('ddos', 'B', 'SYN Floods exploit the TCP 3-way handshake by sending SYN requests but never completing the final ACK. This fills the server\'s backlog queue with half-open connections, preventing legitimate users from connecting.')">Check Answer</button>
+                <div id="feedback_ddos" class="quiz-feedback"></div>
+            </div>
+        </div>
+
+        <!-- 2. INSECURE PROTOCOLS -->
+        <div id="insecure" class="module">
+            <h1>2. Insecure Network Protocols</h1>
+            <div class="info-section">
+                <p><strong>Definition:</strong> Protocols that lack security measures or authentication, making them vulnerable to interception and exploitation.</p>
+                <p><strong>Mechanism:</strong> Data is transmitted in <strong>plaintext</strong>, allowing eavesdropping. Examples include HTTP, FTP, and Telnet.</p>
+                <span class="example"><strong>Example:</strong> Using Telnet or FTP for remote server access allows potential eavesdropping on credentials and data.</span>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <h3>Victim Transmission</h3>
+                    <div class="terminal" id="inc-left">> User submits login form.<br>> Protocol selected: <span class="t-red">HTTP (Port 80)</span><br>> Awaiting transmission...</div>
+                </div>
+                <div class="panel">
+                    <h3>Attacker Wireshark Capture</h3>
+                    <div class="terminal" id="inc-right">> Interface eth0 in promiscuous mode.<br>> Sniffing for packets...</div>
+                </div>
+            </div>
+            <button id="inc-btn" onclick="nextInsecure()">Next Step: Transmit Packet</button>
+
+            <!-- Quiz -->
+            <div class="quiz-section">
+                <h3>Knowledge Check</h3>
+                <p>Why are protocols like HTTP and Telnet considered insecure?</p>
+                <div class="quiz-options">
+                    <label class="quiz-option"><input type="radio" name="q_inc" value="A"> A) They do not use IP addresses.</label>
+                    <label class="quiz-option"><input type="radio" name="q_inc" value="B"> B) They transmit data in plaintext, making it readable by packet sniffers.</label>
+                    <label class="quiz-option"><input type="radio" name="q_inc" value="C"> C) They require multi-factor authentication.</label>
+                    <label class="quiz-option"><input type="radio" name="q_inc" value="D"> D) They automatically delete data after sending.</label>
+                </div>
+                <button onclick="checkAnswer('inc', 'B', 'These protocols send data in cleartext without encryption. Anyone with a packet sniffer (like Wireshark) on the network can read the traffic, including passwords.')">Check Answer</button>
+                <div id="feedback_inc" class="quiz-feedback"></div>
+            </div>
+        </div>
+
+        <!-- 3. MALWARE -->
+        <div id="malware" class="module">
+            <h1>3. Malware (Ransomware)</h1>
+            <div class="info-section">
+                <p><strong>Definition:</strong> Malicious software designed to damage, disrupt, or gain unauthorized access to systems.</p>
+                <p><strong>Mechanism:</strong> Includes viruses, worms, trojans, and spyware. <strong>Ransomware</strong> specifically encrypts files and demands payment for the decryption key.</p>
+                <span class="example"><strong>Example:</strong> A ransomware attack encrypts a company's files, halting operations until a ransom is paid.</span>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <h3>Executable Payload</h3>
+                    <div class="terminal" id="mal-left">> payload.exe executed.<br>> Initializing cryptographic libraries...<br>> Generating AES-256 symmetric key...</div>
+                </div>
+                <div class="panel">
+                    <h3>Victim File System</h3>
+                    <div class="terminal" id="mal-right">[FILE] thesis.docx | Hex: 0x48 0x65 0x6C 0x6C 0x6F<br>[FILE] photo.jpg   | Hex: 0xFF 0xD8 0xFF 0xE0</div>
+                </div>
+            </div>
+            <button id="mal-btn" onclick="nextMalware()">Next Step: Encrypt Files</button>
+
+            <!-- Quiz -->
+            <div class="quiz-section">
+                <h3>Knowledge Check</h3>
+                <p>What is the primary mechanism used by ransomware to force a victim to pay?</p>
+                <div class="quiz-options">
+                    <label class="quiz-option"><input type="radio" name="q_mal" value="A"> A) It deletes the operating system.</label>
+                    <label class="quiz-option"><input type="radio" name="q_mal" value="B"> B) It floods the network with DDoS traffic.</label>
+                    <label class="quiz-option"><input type="radio" name="q_mal" value="C"> C) It encrypts files and holds the decryption key for ransom.</label>
+                    <label class="quiz-option"><input type="radio" name="q_mal" value="D"> D) It steals the monitor's resolution settings.</label>
+                </div>
+                <button onclick="checkAnswer('mal', 'C', 'Ransomware uses strong encryption (like AES-256) to lock files. The attacker keeps the private key and demands payment (often cryptocurrency) to unlock the data.')">Check Answer</button>
+                <div id="feedback_mal" class="quiz-feedback"></div>
+            </div>
+        </div>
+
+        <!-- 4. MITM -->
+        <div id="mitm" class="module">
+            <h1>4. Man-in-the-Middle (MitM)</h1>
+            <div class="info-section">
+                <p><strong>Definition:</strong> The attacker secretly intercepts and possibly alters the communication between two parties who believe they are directly communicating with each other.</p>
+                <p><strong>Mechanism:</strong> Eavesdropping and data manipulation. Often uses ARP spoofing to redirect traffic through the attacker.</p>
+                <span class="example"><strong>Example:</strong> An attacker intercepts a Wi-Fi connection at a café to capture credit card information sent during an online purchase.</span>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <h3>Network Traffic Flow</h3>
+                    <div class="terminal" id="mitm-left">> Victim (192.168.1.50) wants to reach Gateway (192.168.1.1).<br>> Checking local ARP cache...</div>
+                </div>
+                <div class="panel">
+                    <h3>Victim's ARP Cache</h3>
+                    <div class="terminal" id="mitm-right">IP Address       MAC Address<br>192.168.1.1      00:11:22:33:44:55 (Gateway)<br>192.168.1.99     00:AA:BB:CC:DD:EE (Attacker)</div>
+                </div>
+            </div>
+            <button id="mitm-btn" onclick="nextMitM()">Next Step: Attacker Poisons ARP Cache</button>
+
+            <!-- Quiz -->
+            <div class="quiz-section">
+                <h3>Knowledge Check</h3>
+                <p>In an ARP Poisoning attack, what is the attacker trying to manipulate?</p>
+                <div class="quiz-options">
+                    <label class="quiz-option"><input type="radio" name="q_mitm" value="A"> A) The routing table of the ISP.</label>
+                    <label class="quiz-option"><input type="radio" name="q_mitm" value="B"> B) The victim's ARP cache, associating the attacker's MAC with the Gateway's IP.</label>
+                    <label class="quiz-option"><input type="radio" name="q_mitm" value="C"> C) The DNS server's records.</label>
+                    <label class="quiz-option"><input type="radio" name="q_mitm" value="D"> D) The SQL database.</label>
+                </div>
+                <button onclick="checkAnswer('mitm', 'B', 'ARP Poisoning involves sending fake ARP messages to the victim, tricking their computer into associating the attacker\'s MAC address with the Gateway\'s IP. Traffic is then routed through the attacker.')">Check Answer</button>
+                <div id="feedback_mitm" class="quiz-feedback"></div>
+            </div>
+        </div>
+
+        <!-- 5. PHISHING -->
+        <div id="phishing" class="module">
+            <h1>5. Phishing Attacks</h1>
+            <div class="info-section">
+                <p><strong>Definition:</strong> Fraudulent attempts to obtain sensitive information such as usernames, passwords, and credit card details by disguising oneself as a trustworthy entity in electronic communications.</p>
+                <p><strong>Mechanism:</strong> Social engineering and spoofed emails/websites. Targets the <em>user</em>, not the software.</p>
+                <span class="example"><strong>Example:</strong> An email that appears to be from a bank asking recipients to confirm their account details on a fake website.</span>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <h3>Email Client Inbox</h3>
+                    <div class="terminal" id="phish-left">> You have 1 new email.<br><br><span class="t-yellow">From: PayPal Support &lt;support@paypa1.com&gt;</span><br><span class="t-yellow">Subject: URGENT: Account Suspended</span><br><br>Please click here to verify your identity.</div>
+                </div>
+                <div class="panel">
+                    <h3>Raw Email Headers</h3>
+                    <div class="terminal" id="phish-right">> Fetching raw headers...</div>
+                </div>
+            </div>
+            <button id="phish-btn" onclick="nextPhishing()">Next Step: Analyze Email Headers</button>
+
+            <!-- Quiz -->
+            <div class="quiz-section">
+                <h3>Knowledge Check</h3>
+                <p>Why is phishing considered a "social engineering" attack?</p>
+                <div class="quiz-options">
+                    <label class="quiz-option"><input type="radio" name="q_phish" value="A"> A) It exploits software bugs in the browser.</label>
+                    <label class="quiz-option"><input type="radio" name="q_phish" value="B"> B) It targets the human user to trick them into revealing credentials.</label>
+                    <label class="quiz-option"><input type="radio" name="q_phish" value="C"> C) It uses brute force on passwords.</label>
+                    <label class="quiz-option"><input type="radio" name="q_phish" value="D"> D) It modifies database queries.</label>
+                </div>
+                <button onclick="checkAnswer('phish', 'B', 'Phishing relies on manipulating human psychology rather than exploiting software flaws. It tricks the user into willingly handing over sensitive information.')">Check Answer</button>
+                <div id="feedback_phish" class="quiz-feedback"></div>
+            </div>
+        </div>
+
+        <!-- 6. SQL INJECTION -->
+        <div id="sqli" class="module">
+            <h1>6. SQL Injection (SQLi)</h1>
+            <div class="info-section">
+                <p><strong>Definition:</strong> An attack that involves inserting malicious SQL statements into an input field for execution to manipulate or exploit SQL databases.</p>
+                <p><strong>Mechanism:</strong> Exploits insufficient validation of user input. The injected code executes on the server, allowing data extraction, modification, or deletion.</p>
+                <span class="example"><strong>Example:</strong> Entering a specially crafted SQL command in a website's search box that causes the site to reveal sensitive user information.</span>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <h3>Backend Code (PHP)</h3>
+                    <div class="terminal">$user = $_POST['username'];<br>$pass = $_POST['password'];<br><br>$query = "SELECT * FROM users WHERE username = '$user' AND password = '$pass';";</div>
+                </div>
+                <div class="panel">
+                    <h3>Attacker Input & Execution</h3>
+                    <div class="terminal" id="sqli-right">> Awaiting input...</div>
+                </div>
+            </div>
+            <button id="sqli-btn" onclick="nextSQLi()">Next Step: Attacker Inputs Payload</button>
+
+            <!-- Quiz -->
+            <div class="quiz-section">
+                <h3>Knowledge Check</h3>
+                <p>How does a SQL Injection attack work?</p>
+                <div class="quiz-options">
+                    <label class="quiz-option"><input type="radio" name="q_sqli" value="A"> A) By overwhelming the server with requests.</label>
+                    <label class="quiz-option"><input type="radio" name="q_sqli" value="B"> B) By injecting malicious SQL code into an input field to manipulate the database query.</label>
+                    <label class="quiz-option"><input type="radio" name="q_sqli" value="C"> C) By tricking the user into clicking a link.</label>
+                    <label class="quiz-option"><input type="radio" name="q_sqli" value="D"> D) By encrypting the database files.</label>
+                </div>
+                <button onclick="checkAnswer('sqli', 'B', 'SQLi occurs when user input is improperly sanitized. The attacker inserts SQL syntax (like \' OR \'1\'=\'1) that changes the logic of the backend database query, often bypassing authentication.')">Check Answer</button>
+                <div id="feedback_sqli" class="quiz-feedback"></div>
+            </div>
+        </div>
+
+        <!-- 7. XSS -->
+        <div id="xss" class="module">
+            <h1>7. Cross-Site Scripting (XSS)</h1>
+            <div class="info-section">
+                <p><strong>Definition:</strong> A vulnerability in web applications that allows attackers to inject malicious scripts into content viewed by other users.</p>
+                <p><strong>Mechanism:</strong> The attacker embeds a script (often JavaScript) into user-generated content. When other users view the page, the script executes in their browser.</p>
+                <span class="example"><strong>Example:</strong> A comment on a blog that contains a script which, when viewed, steals cookies from other users (Session Hijacking).</span>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <h3>Victim's Browser (Viewing Comment)</h3>
+                    <div class="terminal" id="xss-left">> Loading webpage...<br>> Rendering comments section...</div>
+                </div>
+                <div class="panel">
+                    <h3>Backend Database (Comments)</h3>
+                    <div class="terminal" id="xss-right">ID: 1 | User: Bob | Comment: "Great post!"<br>ID: 2 | User: Eve | Comment: <span class="t-red">&lt;script&gt;stealCookies()&lt;/script&gt;</span></div>
+                </div>
+            </div>
+            <button id="xss-btn" onclick="nextXSS()">Next Step: Victim Loads Page</button>
+
+            <!-- Quiz -->
+            <div class="quiz-section">
+                <h3>Knowledge Check</h3>
+                <p>In a Stored XSS attack, who is the primary victim?</p>
+                <div class="quiz-options">
+                    <label class="quiz-option"><input type="radio" name="q_xss" value="A"> A) The database administrator.</label>
+                    <label class="quiz-option"><input type="radio" name="q_xss" value="B"> B) The web server's operating system.</label>
+                    <label class="quiz-option"><input type="radio" name="q_xss" value="C"> C) Other users who view the malicious content.</label>
+                    <label class="quiz-option"><input type="radio" name="q_xss" value="D"> D) The attacker themselves.</label>
+                </div>
+                <button onclick="checkAnswer('xss', 'C', 'In XSS, the server is just the delivery mechanism. The malicious script is executed in the web browsers of innocent users who view the compromised page, allowing the attacker to steal their data.')">Check Answer</button>
+                <div id="feedback_xss" class="quiz-feedback"></div>
+            </div>
+        </div>
+
+        <!-- 8. UNPATCHED SOFTWARE -->
+        <div id="unpatched" class="module">
+            <h1>8. Unpatched Software</h1>
+            <div class="info-section">
+                <p><strong>Definition:</strong> Software that has not been updated with the latest security patches, making it vulnerable to exploitation.</p>
+                <p><strong>Mechanism:</strong> Attackers scan for known vulnerabilities (CVEs) that have available patches but have not been applied by the system admin. Publishing a patch makes an unpatched system an easier target.</p>
+                <span class="example"><strong>Example:</strong> An operating system that has not been updated, allowing attackers to exploit a known vulnerability.</span>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <h3>Attacker Terminal</h3>
+                    <div class="terminal" id="unp-left">> Searching Exploit-DB for target...<br>> Target: Apache HTTP Server 2.4.49<br>> Found: <span class="t-yellow">CVE-2021-41773 (Path Traversal)</span><br>> Preparing payload...</div>
+                </div>
+                <div class="panel">
+                    <h3>Target Server Response</h3>
+                    <div class="terminal" id="unp-right">> Server version: 2.4.49<br>> Status: Running<br>> Awaiting malicious request...</div>
+                </div>
+            </div>
+            <button id="unp-btn" onclick="nextUnpatched()">Next Step: Send Exploit Payload</button>
+
+            <!-- Quiz -->
+            <div class="quiz-section">
+                <h3>Knowledge Check</h3>
+                <p>Why does publishing a security patch sometimes make unpatched systems *more* vulnerable in the short term?</p>
+                <div class="quiz-options">
+                    <label class="quiz-option"><input type="radio" name="q_unp" value="A"> A) Because the patch breaks the firewall.</label>
+                    <label class="quiz-option"><input type="radio" name="q_unp" value="B"> B) Because attackers read the patch notes to learn about the exact vulnerability (CVE) to exploit.</label>
+                    <label class="quiz-option"><input type="radio" name="q_unp" value="C"> C) Because it slows down the computer.</label>
+                    <label class="quiz-option"><input type="radio" name="q_unp" value="D"> D) Because it changes the IP address.</label>
+                </div>
+                <button onclick="checkAnswer('unp', 'B', 'When a vendor releases a patch, they usually describe the vulnerability they fixed. Attackers reverse-engineer this patch to create exploits, targeting systems that haven\'t applied the update yet.')">Check Answer</button>
+                <div id="feedback_unp" class="quiz-feedback"></div>
+            </div>
+        </div>
+
+        <!-- 9. WEAK AUTHENTICATION -->
+        <div id="weakauth" class="module">
+            <h1>9. Weak Authentication</h1>
+            <div class="info-section">
+                <p><strong>Definition:</strong> Security measures that are easy to bypass or crack, often due to simple or predictable passwords, or lack of multifactor authentication.</p>
+                <p><strong>Mechanism:</strong> Short passwords can be brute-forced in seconds. Credential stuffing uses passwords leaked from other breaches (because people reuse passwords).</p>
+                <span class="example"><strong>Example:</strong> A website that only requires a username and a simple password, without requiring any additional form of verification (MFA).</span>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <h3>Attacker Dictionary Attack</h3>
+                    <div class="terminal" id="weak-left">> Wordlist loaded: rockyou.txt<br>> Target Hash: <span class="t-yellow">5f4dcc3b5aa765d61d8327deb882cf99</span><br>> Generating MD5 hashes for dictionary words...</div>
+                </div>
+                <div class="panel">
+                    <h3>Comparison Logic</h3>
+                    <div class="terminal" id="weak-right">> Testing word: "123456" -> Hash: e10adc... (No match)<br>> Testing word: "password" -> Hash: 5f4dcc... (Match found!)</div>
+                </div>
+            </div>
+            <button id="weak-btn" onclick="nextWeakAuth()">Next Step: Execute Crack</button>
+
+            <!-- Quiz -->
+            <div class="quiz-section">
+                <h3>Knowledge Check</h3>
+                <p>What makes a password vulnerable to a dictionary attack?</p>
+                <div class="quiz-options">
+                    <label class="quiz-option"><input type="radio" name="q_weak" value="A"> A) It is too long.</label>
+                    <label class="quiz-option"><input type="radio" name="q_weak" value="B"> B) It contains special characters.</label>
+                    <label class="quiz-option"><input type="radio" name="q_weak" value="C"> C) It is a common word or predictable pattern found in a wordlist.</label>
+                    <label class="quiz-option"><input type="radio" name="q_weak" value="D"> D) It is hashed using SHA-256.</label>
+                </div>
+                <button onclick="checkAnswer('weak', 'C', 'A dictionary attack uses a pre-compiled list of common words and passwords. If your password is a standard word (like "password" or "admin"), the computer will crack it almost instantly.')">Check Answer</button>
+                <div id="feedback_weak" class="quiz-feedback"></div>
+            </div>
+        </div>
+
+        <!-- 10. ZERO-DAY -->
+        <div id="zeroday" class="module">
+            <h1>10. Zero-Day Exploits</h1>
+            <div class="info-section">
+                <p><strong>Definition:</strong> Attacks that take advantage of a previously unknown vulnerability in software or hardware before the developer has released a patch or the public is aware of it.</p>
+                <p><strong>Mechanism:</strong> Because the vulnerability is unknown, there are no defenses (no antivirus signature, no firewall rule). Highly sought after by criminals and nation-states.</p>
+                <span class="example"><strong>Example:</strong> Stuxnet was a zero-day used to break Iran's uranium-enrichment centrifuges in 2006, suspected to be created by the US NSA.</span>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <h3>Defense Systems</h3>
+                    <div class="terminal" id="zero-left">> Antivirus: ACTIVE (Signatures up to date)<br>> Firewall: ACTIVE (Blocking known CVE traffic)<br>> System: FULLY PATCHED</div>
+                </div>
+                <div class="panel">
+                    <h3>Attacker Payload</h3>
+                    <div class="terminal" id="zero-right">> Using unknown memory corruption flaw.<br>> Injecting shellcode via buffer overflow...<br>> Awaiting execution...</div>
+                </div>
+            </div>
+            <button id="zero-btn" class="danger" onclick="nextZeroDay()">Next Step: Execute Zero-Day</button>
+
+            <!-- Quiz -->
+            <div class="quiz-section">
+                <h3>Knowledge Check</h3>
+                <p>What makes a zero-day exploit so dangerous?</p>
+                <div class="quiz-options">
+                    <label class="quiz-option"><input type="radio" name="q_zero" value="A"> A) It requires no coding knowledge.</label>
+                    <label class="quiz-option"><input type="radio" name="q_zero" value="B"> B) There are no existing patches or antivirus signatures because the vulnerability is unknown.</label>
+                    <label class="quiz-option"><input type="radio" name="q_zero" value="C"> C) It only targets Windows computers.</label>
+                    <label class="quiz-option"><input type="radio" name="q_zero" value="D"> D) It is legal to use.</label>
+                </div>
+                <button onclick="checkAnswer('zero', 'B', 'A zero-day is dangerous because the software vendor has "zero days" to fix it before it is exploited. Since the vulnerability is unknown, antivirus and firewalls have no signatures to detect it.')">Check Answer</button>
+                <div id="feedback_zero" class="quiz-feedback"></div>
+            </div>
+        </div>
+
+        <!-- 11. COMBINED -->
+        <div id="combined" class="module">
+            <h1>11. How Vulnerabilities Combine</h1>
+            <div class="info-section">
+                <p>A real breach rarely uses one vulnerability. An exam scenario usually describes a <strong>chain</strong> of them.</p>
+                <p><strong>The Chain:</strong> 1. Phishing email steals credentials → 2. Weak authentication (no MFA) allows login → 3. Attacker exploits unpatched software for root control → 4. Malware encrypts files.</p>
+                <span class="example"><strong>Breaking the chain:</strong> Identifying just one link in the chain (e.g., enforcing MFA) can break the entire attack.</span>
+            </div>
+            <div class="workspace">
+                <div class="panel">
+                    <h3>Attack Chain Timeline</h3>
+                    <div class="terminal" id="comb-left">> Awaiting attack sequence...</div>
+                </div>
+                <div class="panel">
+                    <h3>Defense Systems</h3>
+                    <div class="terminal" id="comb-right">> MFA: DISABLED<br>> Patch Level: OUTDATED<br>> Antivirus: ACTIVE</div>
+                </div>
+            </div>
+            <button id="comb-btn" onclick="nextCombined()">Next Step: Initiate Attack Chain</button>
+
+            <!-- Quiz -->
+            <div class="quiz-section">
+                <h3>Knowledge Check</h3>
+                <p>In an attack chain, why is breaking just one link (e.g., enabling MFA) effective?</p>
+                <div class="quiz-options">
+                    <label class="quiz-option"><input type="radio" name="q_comb" value="A"> A) It fixes all other vulnerabilities automatically.</label>
+                    <label class="quiz-option"><input type="radio" name="q_comb" value="B"> B) It prevents the attacker from progressing to the next stage.</label>
+                    <label class="quiz-option"><input type="radio" name="q_comb" value="C"> C) It makes the computer faster.</label>
+                    <label class="quiz-option"><input type="radio" name="q_comb" value="D"> D) It blocks all IP addresses.</label>
+                </div>
+                <button onclick="checkAnswer('comb', 'B', 'Attackers must complete each step to reach their goal. If you break the chain at any point (like stopping credential theft with MFA), the attacker cannot proceed to the next stage.')">Check Answer</button>
+                <div id="feedback_comb" class="quiz-feedback"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Navigation
+        function showMod(id, el) {
+            document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+        }
+
+        // Quiz Logic
+        function checkAnswer(quizId, correctAnswer, explanation) {
+            const radios = document.getElementsByName('q_' + quizId);
+            let selectedValue = null;
+            for (const radio of radios) {
+                if (radio.checked) {
+                    selectedValue = radio.value;
+                    break;
+                }
+            }
+            
+            const feedbackDiv = document.getElementById('feedback_' + quizId);
+            if (!selectedValue) {
+                feedbackDiv.className = 'quiz-feedback feedback-wrong';
+                feedbackDiv.innerHTML = "Please select an option.";
+                return;
+            }
+
+            if (selectedValue === correctAnswer) {
+                feedbackDiv.className = 'quiz-feedback feedback-correct';
+                feedbackDiv.innerHTML = `✅ Correct!<br><span style="font-weight:normal; font-size:0.85rem; color:#c9d1d9;">${explanation}</span>`;
+            } else {
+                feedbackDiv.className = 'quiz-feedback feedback-wrong';
+                feedbackDiv.innerHTML = `❌ Incorrect. Try again.<br><span style="font-weight:normal; font-size:0.85rem; color:#c9d1d9;">Hint: Re-read the textbook definition above.</span>`;
+            }
+        }
+
+        // 1. DDOS
+        let ddosStep = 0;
+        function nextDDoS() {
+            const left = document.getElementById('ddos-left');
+            const right = document.getElementById('ddos-right');
+            const btn = document.getElementById('ddos-btn');
+            ddosStep++;
+            if (ddosStep === 1) {
+                left.innerHTML = "> Sending 10,000 SYN packets with spoofed IPs...";
+                right.innerHTML = "> Server Backlog Queue: [ 1 / 5 ]<br>> [RECEIVED] SYN from IP 10.0.0.1 (Spoofed)<br>> [SENT] SYN-ACK to 10.0.0.1<br>> [WAITING] for ACK...";
+                btn.innerText = "Next Step: Flood Backlog Queue";
+            } else if (ddosStep === 2) {
+                left.innerHTML += "<br>> Packets sent.";
+                right.innerHTML = "> Server Backlog Queue: <span class='t-red'>[ 5 / 5 ] (FULL)</span><br>> [RECEIVED] SYN from Legitimate User<br>> <span class='t-red'>[DROPPED] Connection reset. Queue full.</span>";
+                btn.disabled = true;
+            }
+        }
+
+        // 2. INSECURE
+        let incStep = 0;
+        function nextInsecure() {
+            const left = document.getElementById('inc-left');
+            const right = document.getElementById('inc-right');
+            const btn = document.getElementById('inc-btn');
+            incStep++;
+            if (incStep === 1) {
+                left.innerHTML = "> Sending HTTP POST to bank.com...";
+                right.innerHTML = "> Frame Captured (Port 80)<br>> Payload (Hex): 50 4F 53 54 20 ...<br>> Decoding ASCII...";
+                btn.innerText = "Next Step: View Cleartext Payload";
+            } else if (incStep === 2) {
+                right.innerHTML = "> Frame Captured (Port 80)<br>> <span class='t-red'>POST /login HTTP/1.1<br>username=admin&password=SuperSecretPass123</span>";
+                btn.disabled = true;
+            }
+        }
+
+        // 3. MALWARE
+        let malStep = 0;
+        function nextMalware() {
+            const left = document.getElementById('mal-left');
+            const right = document.getElementById('mal-right');
+            const btn = document.getElementById('mal-btn');
+            malStep++;
+            if (malStep === 1) {
+                left.innerHTML = "> Key generated: A1B2C3D4E5...<br>> Encrypting files...";
+                right.innerHTML = "[FILE] thesis.docx | Hex: <span class='t-red'>0x9F 0x2A 0x1B 0x8C 0x7D</span><br>[FILE] photo.jpg | Hex: <span class='t-red'>0x4E 0x8F 0x1A 0x2B 0x9C</span><br>> Files encrypted.";
+                btn.innerText = "Next Step: Delete Originals & Ransom";
+            } else if (malStep === 2) {
+                left.innerHTML += "<br>> Original files securely deleted.";
+                right.innerHTML += "<br><br><span class='t-red'>YOUR FILES HAVE BEEN ENCRYPTED.<br>Send 0.5 BTC to unlock.</span>";
+                btn.disabled = true;
+            }
+        }
+
+        // 4. MITM
+        let mitmStep = 0;
+        function nextMitM() {
+            const left = document.getElementById('mitm-left');
+            const right = document.getElementById('mitm-right');
+            const btn = document.getElementById('mitm-btn');
+            mitmStep++;
+            if (mitmStep === 1) {
+                left.innerHTML = "> <span class='t-red'>[ATTACKER] Sends ARP Reply: '192.168.1.1 is at 00:AA:BB:CC:DD:EE'</span>";
+                right.innerHTML = "IP Address       MAC Address<br>192.168.1.1      <span class='t-red'>00:AA:BB:CC:DD:EE (POISONED!)</span><br>192.168.1.99     00:AA:BB:CC:DD:EE";
+                btn.innerText = "Next Step: Victim Sends Traffic";
+            } else if (mitmStep === 2) {
+                left.innerHTML += "<br>> Victim sends packet to Gateway...<br>> <span class='t-red'>Traffic routed to Attacker's MAC instead.</span>";
+                btn.disabled = true;
+            }
+        }
+
+        // 5. PHISHING
+        let phishStep = 0;
+        function nextPhishing() {
+            const right = document.getElementById('phish-right');
+            const btn = document.getElementById('phish-btn');
+            phishStep++;
+            if (phishStep === 1) {
+                right.innerHTML = "Return-Path: &lt;bounce@malicious.ru&gt;<br>Received-SPF: <span class='t-red'>fail</span> (not permitted)<br>Authentication-Results:<br>  <span class='t-red'>dkim=fail</span><br>  <span class='t-red'>dmarc=fail</span><br><br>> <span class='t-yellow'>WARNING: Spoofed sender detected.</span>";
+                btn.disabled = true;
+            }
+        }
+
+        // 6. SQLI
+        let sqliStep = 0;
+        function nextSQLi() {
+            const right = document.getElementById('sqli-right');
+            const btn = document.getElementById('sqli-btn');
+            sqliStep++;
+            if (sqliStep === 1) {
+                right.innerHTML = "> Input User: admin<br>> Input Pass: <span class='t-red'>' OR '1'='1</span><br><br>> Executing:<br><span class='t-blue'>SELECT * FROM users WHERE username = 'admin' AND password = '' OR '1'='1';</span>";
+                btn.innerText = "Next Step: Database Parses Logic";
+            } else if (sqliStep === 2) {
+                right.innerHTML += "<br><br>> Logic: '1'='1' is ALWAYS TRUE.<br>> <span class='t-green'>Query returns TRUE. Login Successful.</span>";
+                btn.disabled = true;
+            }
+        }
+
+        // 7. XSS
+        let xssStep = 0;
+        function nextXSS() {
+            const left = document.getElementById('xss-left');
+            const btn = document.getElementById('xss-btn');
+            xssStep++;
+            if (xssStep === 1) {
+                left.innerHTML = "> Rendering Comment ID 2...<br>> Browser executes: <span class='t-red'>&lt;script&gt;stealCookies()&lt;/script&gt;</span><br>> <span class='t-red'>Cookie sent to attacker's server!</span>";
+                btn.disabled = true;
+            }
+        }
+
+        // 8. UNPATCHED
+        let unpStep = 0;
+        function nextUnpatched() {
+            const right = document.getElementById('unp-right');
+            const btn = document.getElementById('unp-btn');
+            unpStep++;
+            if (unpStep === 1) {
+                right.innerHTML = "> GET /cgi-bin/.%2e/.%2e/.%2e/etc/passwd HTTP/1.1<br>> Processing...<br>> <span class='t-red'>HTTP/1.1 200 OK. File Contents: root:x:0:0...</span><br>> <span class='t-red'>Exploit Successful.</span>";
+                btn.disabled = true;
+            }
+        }
+
+        // 9. WEAK AUTH
+        let weakStep = 0;
+        function nextWeakAuth() {
+            const left = document.getElementById('weak-left');
+            const btn = document.getElementById('weak-btn');
+            weakStep++;
+            if (weakStep === 1) {
+                left.innerHTML = "> Testing word: '123456' -> Hash: e10adc... (No match)<br>> Testing word: 'password' -> Hash: <span class='t-green'>5f4dcc... (Match found!)</span><br>> <span class='t-green'>Password cracked: 'password'</span>";
+                btn.disabled = true;
+            }
+        }
+
+        // 10. ZERO-DAY
+        let zeroStep = 0;
+        function nextZeroDay() {
+            const left = document.getElementById('zero-left');
+            const right = document.getElementById('zero-right');
+            const btn = document.getElementById('zero-btn');
+            zeroStep++;
+            if (zeroStep === 1) {
+                left.innerHTML = "> <span class='t-red'>AV Signature Match: 0% (Unknown threat)</span><br>> <span class='t-red'>Firewall: Exploit traffic bypassed</span><br>> <span class='t-red'>SYSTEM COMPROMISED.</span>";
+                right.innerHTML = "> Shellcode executed.<br>> Remote Code Execution (RCE) achieved.<br>> Reverse shell established.";
+                btn.disabled = true;
+            }
+        }
+
+        // 11. COMBINED
+        let combStep = 0;
+        function nextCombined() {
+            const left = document.getElementById('comb-left');
+            const right = document.getElementById('comb-right');
+            const btn = document.getElementById('comb-btn');
+            combStep++;
+            
+            if (combStep === 1) {
+                left.innerHTML = "<span class='t-yellow'>[PHASE 1: INITIAL ACCESS]</span><br>> Sending phishing email...<br>> User clicks link and enters credentials.<br>> <span class='t-red'>Credentials stolen.</span>";
+                right.innerHTML = "> MFA: DISABLED<br>> Patch Level: OUTDATED<br>> Antivirus: ACTIVE";
+                btn.innerText = "Next Step: Exploit Unpatched Software";
+            } else if (combStep === 2) {
+                left.innerHTML += "<br><br><span class='t-yellow'>[PHASE 2: PRIVILEGE ESCALATION]</span><br>> Using stolen credentials to login.<br>> Exploiting unpatched CVE-2023-1234 on server...<br>> <span class='t-red'>Root access achieved.</span>";
+                right.innerHTML = "> MFA: DISABLED<br>> <span class='t-red'>Patch Level: EXPLOITED</span><br>> Antivirus: ACTIVE";
+                btn.innerText = "Next Step: Deploy Malware";
+            } else if (combStep === 3) {
+                left.innerHTML += "<br><br><span class='t-yellow'>[PHASE 3: IMPACT]</span><br>> Deploying ransomware payload.<br>> Encrypting database files...<br>> <span class='t-red'>Attack Successful. Ransom demanded.</span>";
+                right.innerHTML = "> MFA: DISABLED<br>> Patch Level: EXPLOITED<br>> <span class='t-red'>Antivirus: BYPASSED</span>";
+                btn.innerText = "Chain Complete";
+                btn.disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>
