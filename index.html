@@ -29,6 +29,7 @@
         .info-section strong { color: var(--accent); }
         .info-section p { margin: 5px 0; }
         .info-section .example { color: var(--warning); margin-top: 10px; display: block; }
+        .info-section .counter { color: var(--success); margin-top: 10px; display: block; }
 
         /* Two-Panel Layout (Simulator) */
         .workspace { display: flex; gap: 20px; flex-grow: 1; margin-bottom: 15px; min-height: 200px;}
@@ -88,6 +89,7 @@
                 <p><strong>Definition:</strong> An attack that overwhelms a website or online service with excessive traffic from multiple sources, rendering it inaccessible to legitimate users.</p>
                 <p><strong>Mechanism:</strong> Attackers use a <strong>botnet</strong> (a network of infected devices) to generate a massive volume of requests, saturating the target's resources.</p>
                 <span class="example"><strong>Example:</strong> An e-commerce site is overwhelmed with traffic from thousands of infected computers, causing it to crash during a major sales event.</span>
+                <span class="counter"><strong>Countermeasure:</strong> Traffic filtering, rate limiting, and DDoS mitigation services (like Cloudflare).</span>
             </div>
             <div class="workspace">
                 <div class="panel">
@@ -101,7 +103,6 @@
             </div>
             <button id="ddos-btn" onclick="nextDDoS()">Next Step: Send Spoofed SYN Packets</button>
             
-            <!-- Quiz -->
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
                 <p>Which specific mechanism does a SYN Flood exploit to cause a denial of service?</p>
@@ -123,6 +124,7 @@
                 <p><strong>Definition:</strong> Protocols that lack security measures or authentication, making them vulnerable to interception and exploitation.</p>
                 <p><strong>Mechanism:</strong> Data is transmitted in <strong>plaintext</strong>, allowing eavesdropping. Examples include HTTP, FTP, and Telnet.</p>
                 <span class="example"><strong>Example:</strong> Using Telnet or FTP for remote server access allows potential eavesdropping on credentials and data.</span>
+                <span class="counter"><strong>Countermeasure:</strong> Use modern encrypted alternatives like HTTPS, SFTP, and SSH.</span>
             </div>
             <div class="workspace">
                 <div class="panel">
@@ -136,7 +138,6 @@
             </div>
             <button id="inc-btn" onclick="nextInsecure()">Next Step: Transmit Packet</button>
 
-            <!-- Quiz -->
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
                 <p>Why are protocols like HTTP and Telnet considered insecure?</p>
@@ -156,8 +157,9 @@
             <h1>3. Malware (Ransomware)</h1>
             <div class="info-section">
                 <p><strong>Definition:</strong> Malicious software designed to damage, disrupt, or gain unauthorized access to systems.</p>
-                <p><strong>Mechanism:</strong> Includes viruses, worms, trojans, and spyware. <strong>Ransomware</strong> specifically encrypts files and demands payment for the decryption key.</p>
+                <p><strong>Mechanism:</strong> Includes <strong>viruses, worms, trojans, spyware, and keyloggers</strong>. <strong>Ransomware</strong> specifically encrypts files and demands payment for the decryption key.</p>
                 <span class="example"><strong>Example:</strong> A ransomware attack encrypts a company's files, halting operations until a ransom is paid.</span>
+                <span class="counter"><strong>Countermeasure:</strong> Regular offline backups, antivirus software, and user education against clicking suspicious links.</span>
             </div>
             <div class="workspace">
                 <div class="panel">
@@ -171,7 +173,6 @@
             </div>
             <button id="mal-btn" onclick="nextMalware()">Next Step: Encrypt Files</button>
 
-            <!-- Quiz -->
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
                 <p>What is the primary mechanism used by ransomware to force a victim to pay?</p>
@@ -193,6 +194,7 @@
                 <p><strong>Definition:</strong> The attacker secretly intercepts and possibly alters the communication between two parties who believe they are directly communicating with each other.</p>
                 <p><strong>Mechanism:</strong> Eavesdropping and data manipulation. Often uses ARP spoofing to redirect traffic through the attacker.</p>
                 <span class="example"><strong>Example:</strong> An attacker intercepts a Wi-Fi connection at a café to capture credit card information sent during an online purchase.</span>
+                <span class="counter"><strong>Countermeasure:</strong> End-to-end encryption (HTTPS, VPNs) and avoiding unsecured public Wi-Fi.</span>
             </div>
             <div class="workspace">
                 <div class="panel">
@@ -206,7 +208,6 @@
             </div>
             <button id="mitm-btn" onclick="nextMitM()">Next Step: Attacker Poisons ARP Cache</button>
 
-            <!-- Quiz -->
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
                 <p>In an ARP Poisoning attack, what is the attacker trying to manipulate?</p>
@@ -226,8 +227,9 @@
             <h1>5. Phishing Attacks</h1>
             <div class="info-section">
                 <p><strong>Definition:</strong> Fraudulent attempts to obtain sensitive information such as usernames, passwords, and credit card details by disguising oneself as a trustworthy entity in electronic communications.</p>
-                <p><strong>Mechanism:</strong> Social engineering and spoofed emails/websites. Targets the <em>user</em>, not the software.</p>
+                <p><strong>Mechanism:</strong> Social engineering and spoofed emails/websites. Targets the <em>user</em>, not the software. Spear phishing targets a specific person.</p>
                 <span class="example"><strong>Example:</strong> An email that appears to be from a bank asking recipients to confirm their account details on a fake website.</span>
+                <span class="counter"><strong>Countermeasure:</strong> User education, email filtering, and multi-factor authentication (MFA).</span>
             </div>
             <div class="workspace">
                 <div class="panel">
@@ -241,7 +243,6 @@
             </div>
             <button id="phish-btn" onclick="nextPhishing()">Next Step: Analyze Email Headers</button>
 
-            <!-- Quiz -->
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
                 <p>Why is phishing considered a "social engineering" attack?</p>
@@ -262,7 +263,8 @@
             <div class="info-section">
                 <p><strong>Definition:</strong> An attack that involves inserting malicious SQL statements into an input field for execution to manipulate or exploit SQL databases.</p>
                 <p><strong>Mechanism:</strong> Exploits insufficient validation of user input. The injected code executes on the server, allowing data extraction, modification, or deletion.</p>
-                <span class="example"><strong>Example:</strong> Entering a specially crafted SQL command in a website's search box that causes the site to reveal sensitive user information.</span>
+                <span class="example"><strong>Example:</strong> Entering <code>Robert'); DROP TABLE Students; --</code> in a form could delete the whole database.</span>
+                <span class="counter"><strong>Countermeasure:</strong> Input validation, parameterized queries (prepared statements), and stored procedures.</span>
             </div>
             <div class="workspace">
                 <div class="panel">
@@ -276,7 +278,6 @@
             </div>
             <button id="sqli-btn" onclick="nextSQLi()">Next Step: Attacker Inputs Payload</button>
 
-            <!-- Quiz -->
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
                 <p>How does a SQL Injection attack work?</p>
@@ -298,6 +299,7 @@
                 <p><strong>Definition:</strong> A vulnerability in web applications that allows attackers to inject malicious scripts into content viewed by other users.</p>
                 <p><strong>Mechanism:</strong> The attacker embeds a script (often JavaScript) into user-generated content. When other users view the page, the script executes in their browser.</p>
                 <span class="example"><strong>Example:</strong> A comment on a blog that contains a script which, when viewed, steals cookies from other users (Session Hijacking).</span>
+                <span class="counter"><strong>Countermeasure:</strong> Input sanitization, output encoding, and Content Security Policy (CSP).</span>
             </div>
             <div class="workspace">
                 <div class="panel">
@@ -311,7 +313,6 @@
             </div>
             <button id="xss-btn" onclick="nextXSS()">Next Step: Victim Loads Page</button>
 
-            <!-- Quiz -->
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
                 <p>In a Stored XSS attack, who is the primary victim?</p>
@@ -331,8 +332,9 @@
             <h1>8. Unpatched Software</h1>
             <div class="info-section">
                 <p><strong>Definition:</strong> Software that has not been updated with the latest security patches, making it vulnerable to exploitation.</p>
-                <p><strong>Mechanism:</strong> Attackers scan for known vulnerabilities (CVEs) that have available patches but have not been applied by the system admin. Publishing a patch makes an unpatched system an easier target.</p>
+                <p><strong>Mechanism:</strong> Attackers scan for known vulnerabilities (CVEs) that have available patches but have not been applied. Publishing a patch makes an unpatched system an easier target.</p>
                 <span class="example"><strong>Example:</strong> An operating system that has not been updated, allowing attackers to exploit a known vulnerability.</span>
+                <span class="counter"><strong>Countermeasure:</strong> Automated patch management and vulnerability scanning.</span>
             </div>
             <div class="workspace">
                 <div class="panel">
@@ -346,7 +348,6 @@
             </div>
             <button id="unp-btn" onclick="nextUnpatched()">Next Step: Send Exploit Payload</button>
 
-            <!-- Quiz -->
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
                 <p>Why does publishing a security patch sometimes make unpatched systems *more* vulnerable in the short term?</p>
@@ -368,6 +369,7 @@
                 <p><strong>Definition:</strong> Security measures that are easy to bypass or crack, often due to simple or predictable passwords, or lack of multifactor authentication.</p>
                 <p><strong>Mechanism:</strong> Short passwords can be brute-forced in seconds. Credential stuffing uses passwords leaked from other breaches (because people reuse passwords).</p>
                 <span class="example"><strong>Example:</strong> A website that only requires a username and a simple password, without requiring any additional form of verification (MFA).</span>
+                <span class="counter"><strong>Countermeasure:</strong> Strong password policies, Multi-Factor Authentication (MFA), and account lockout mechanisms.</span>
             </div>
             <div class="workspace">
                 <div class="panel">
@@ -381,7 +383,6 @@
             </div>
             <button id="weak-btn" onclick="nextWeakAuth()">Next Step: Execute Crack</button>
 
-            <!-- Quiz -->
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
                 <p>What makes a password vulnerable to a dictionary attack?</p>
@@ -403,6 +404,7 @@
                 <p><strong>Definition:</strong> Attacks that take advantage of a previously unknown vulnerability in software or hardware before the developer has released a patch or the public is aware of it.</p>
                 <p><strong>Mechanism:</strong> Because the vulnerability is unknown, there are no defenses (no antivirus signature, no firewall rule). Highly sought after by criminals and nation-states.</p>
                 <span class="example"><strong>Example:</strong> Stuxnet was a zero-day used to break Iran's uranium-enrichment centrifuges in 2006, suspected to be created by the US NSA.</span>
+                <span class="counter"><strong>Countermeasure:</strong> Advanced behavioral analysis tools (EDR), zero-trust architecture, and rapid incident response.</span>
             </div>
             <div class="workspace">
                 <div class="panel">
@@ -416,7 +418,6 @@
             </div>
             <button id="zero-btn" class="danger" onclick="nextZeroDay()">Next Step: Execute Zero-Day</button>
 
-            <!-- Quiz -->
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
                 <p>What makes a zero-day exploit so dangerous?</p>
@@ -437,7 +438,7 @@
             <div class="info-section">
                 <p>A real breach rarely uses one vulnerability. An exam scenario usually describes a <strong>chain</strong> of them.</p>
                 <p><strong>The Chain:</strong> 1. Phishing email steals credentials → 2. Weak authentication (no MFA) allows login → 3. Attacker exploits unpatched software for root control → 4. Malware encrypts files.</p>
-                <span class="example"><strong>Breaking the chain:</strong> Identifying just one link in the chain (e.g., enforcing MFA) can break the entire attack.</span>
+                <span class="counter"><strong>Breaking the chain:</strong> Identifying just one link in the chain (e.g., enforcing MFA) can break the entire attack.</span>
             </div>
             <div class="workspace">
                 <div class="panel">
@@ -451,7 +452,6 @@
             </div>
             <button id="comb-btn" onclick="nextCombined()">Next Step: Initiate Attack Chain</button>
 
-            <!-- Quiz -->
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
                 <p>In an attack chain, why is breaking just one link (e.g., enabling MFA) effective?</p>
